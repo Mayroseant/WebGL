@@ -1,9 +1,9 @@
-.main-content {
+/* .main-content {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-}
+} */
 
 #gameDiv {
   display: none;
@@ -11,4 +11,23 @@
 
 #gameEndDiv {
   display: none;
+}
+#gameStartDiv {
+  background-image: url('assets/Scene1_Background_Image.jpg');
+  background-size: cover; /* Cover the area of the container */
+  background-position: center center; /* Center the image */
+  background-repeat: no-repeat; /* Prevent tiling */
+  height: 100vh; /* Make sure the body covers the whole viewport */
+  margin: 0; /* Remove default margin */
+}
+
+.Btn1 {
+  background-image: url('assets/CTA-Button.png');
+  background-size: cover; /* Cover the area of the container */
+  background-position: center center; /* Center the image */
+  background-repeat: no-repeat;
+  margin-top: 29%;
+  margin-left: 7%;
+  width: 100px;
+  height: 37px;
 }
