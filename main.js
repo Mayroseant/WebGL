@@ -6,7 +6,7 @@ const sizes = {
   height: window.innerHeight,
 };
 
-const speedDown = 300;
+const speedDown = 200;
 
 const gameStartDiv = document.querySelector("#gameStartDiv");
 const gameStartBtn = document.querySelector("#gameStartBtn");
@@ -19,8 +19,8 @@ class GameScene extends Phaser.Scene {
     super("scene-game");
     this.player;
     this.cursor;
-    this.playerSpeed = speedDown + 50;
-    this.target;
+    this.playerSpeed = speedDown + 250;
+    // this.target;
     this.points = 0;
     this.textScore;
     this.textTime;
@@ -29,6 +29,7 @@ class GameScene extends Phaser.Scene {
     this.coinMusic;
     this.bgMusic;
     this.emitter;
+    this.targets = null;
   }
 
   preload() {
@@ -57,6 +58,7 @@ class GameScene extends Phaser.Scene {
     this.background.setOrigin(0, 0);
     
     this.player = this.physics.add.image(sizes.width/2 ,sizes.height - 100,"basket").setOrigin(0,0);
+    // this.player.setScale(1.5);
     this.player.setImmovable(true);
     this.player.body.allowGravity = false;
     this.player.setCollideWorldBounds(true);
@@ -64,11 +66,25 @@ class GameScene extends Phaser.Scene {
     // this.player.setSize(this.player.width - this.player.width/4, this.player.height/6)
     //             .setOffset(this.player.width/10, this.player.height - this.player.height/10);
 
-    this.target = this.physics.add.image(0,0,this.getRandomTargetType()).setOrigin(0,0);
-    this.target.setMaxVelocity(0, speedDown);
+    // this.target = this.physics.add.image(0,0,this.getRandomTargetType()).setOrigin(0,0);
+    this.targets = this.physics.add.group({
+      key: this.getRandomTargetType(),
+      repeat: Phaser.Math.Between(1, 5),
+      setXY: { x: 12, y: 0, stepX: 70, stepY: 70 },
+      setScale: { x: 1, y: 1 }
+    });
+    // this.target.setMaxVelocity(0, speedDown);
 
-    this.physics.add.overlap(this.target, this.player, this.targetHit, null, this);
+    // this.physics.add.overlap(this.target, this.player, this.targetHit, null, this);
+    this.targets.children.iterate(function (child) {
+      // child.setVelocity(0, speedDown);
+      child.setX(Phaser.Math.Between(0, sizes.width - child.displayWidth));
+      child.setY(Phaser.Math.Between(-200, 0));
+      child.setMaxVelocity(0, speedDown);
+    });
 
+    this.physics.add.collider(this.targets, this.player, this.targetHit, null, this);
+    
     this.cursor = this.input.keyboard.createCursorKeys();
 
     this.textScore = this.add.text(sizes.width - 200, 10, "Tax Benefits: 0", {
@@ -96,12 +112,19 @@ class GameScene extends Phaser.Scene {
     this.remainingTime = this.timedEvent.getRemainingSeconds();
     this.textTime.setText(`Remaining Time: ${Math.round(this.remainingTime).toString()}`);
 
-    if(this.target.y >= sizes.height) {
-      this.target.setX(this.getRandomX());
-      this.target.setTexture(this.getRandomTargetType());
-      this.target.setY(0);
-    }
-
+    // if(this.target.y >= sizes.height) {
+    //   this.target.setX(this.getRandomX());
+    //   this.target.setTexture(this.getRandomTargetType());
+    //   this.target.setY(0);
+    // }
+    this.targets.children.iterate(function (target) {
+      if (target.y >= sizes.height) {
+          target.setX(Phaser.Math.Between(0, sizes.width - target.displayWidth));
+          target.setY(Phaser.Math.Between(-200, 0));
+          target.setTexture(this.getRandomTargetType());
+      }
+    }, this);
+    
     const { left, right } = this.cursor;
 
     if(left.isDown) {
@@ -123,20 +146,23 @@ class GameScene extends Phaser.Scene {
     // return Math.floor(Math.random() * sizes.width - 100);
   }
 
-  targetHit() {
+  targetHit(player, target) {
     this.coinMusic.play();
     this.emitter.start();
+    this.updateScore(target);
     // this.target.setTexture(this.getRandomTargetType());
-    this.target.setY(0);
-    this.target.setX(this.getRandomX());
-    this.updateScore();
+    // this.target.setY(0);
+    // this.target.setX(this.getRandomX());
+    target.setX(Phaser.Math.Between(0, sizes.width - target.displayWidth));
+    target.setY(Phaser.Math.Between(-200, 0));
+    target.setTexture(this.getRandomTargetType());
   }
 
   gameOver() {
     gameDiv.style.display = "none";
     gameEndDiv.style.display = "flex";
     this.sys.game.destroy(true);
-    if(this.points >= 10) {
+    if(this.points >= 500) {
       gameEndScoreSpan.textContent = this.points;
       gameWinLoseSpan.textContent = "Win!";
     } else {
@@ -145,8 +171,9 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  updateScore() {
-    const key = this.target?.texture?.key;
+  updateScore(target) {
+    const key = target?.texture?.key;
+    console.log(key)
     switch (key) {
       case 'coins':
         this.points +=100;
@@ -164,7 +191,7 @@ class GameScene extends Phaser.Scene {
         // this.points +=100;
         break;
     }
-    this.textScore.setText(`Score: ${this.points}`);
+    this.textScore.setText(`Tax Benefits: ${this.points}`);
   }
 
 }
@@ -174,7 +201,6 @@ const config = {
   width: window.innerWidth,  
   height: window.innerHeight,
   canvas: gameCanvas,
-  // device: ,
   physics: {
     default: "arcade",
     arcade: {
